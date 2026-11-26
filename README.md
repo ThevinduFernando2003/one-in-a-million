@@ -1,16 +1,59 @@
+<div align="center">
+
 # One in a Million
 
-Every visitor gets a **token number**, issued in order, starting at 1, until all **1,000,000** are
-taken.
+**Take a number. Every visitor gets a unique one, in order, until all 1,000,000 are gone.**
+
+[![CI](https://github.com/ThevinduFernando2003/one-in-a-million/actions/workflows/ci.yml/badge.svg)](https://github.com/ThevinduFernando2003/one-in-a-million/actions/workflows/ci.yml)
+[![Live](https://img.shields.io/badge/live-one--in--a--million--nine.vercel.app-000?logo=vercel)](https://one-in-a-million-nine.vercel.app)
+![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
+![Redis](https://img.shields.io/badge/Upstash-Redis-00e9a3?logo=redis&logoColor=white)
+
+### ▶ [one-in-a-million-nine.vercel.app](https://one-in-a-million-nine.vercel.app)
+
+<img src="docs/screenshots/dark.webp" alt="A number on the dark theme" width="49%" />
+<img src="docs/screenshots/light.webp" alt="A number on the light theme" width="49%" />
+
+</div>
+
+## What it is
+
+A tiny web app with one rule and a hard engineering problem behind it:
 
 - Open the page and you get the next number.
 - Refresh while nobody else has taken one since, and you keep yours.
 - If someone else took a number in the meantime, a refresh gives you a new one.
-- No two visitors can ever hold the same number, and number 1,000,001 is never issued.
+- **No two visitors can ever hold the same number**, and number 1,000,001 is never issued, even
+  when thousands of people arrive at the same moment on serverless infrastructure.
 
-Stack: Next.js 16 (App Router) · TypeScript (strict) · Tailwind CSS 4 · Upstash Redis
-(`@upstash/redis`, `@upstash/ratelimit`) · `canvas-confetti` · Vitest · ESLint · Prettier. Deploys
-to Vercel.
+Along the way:
+
+- **Prime-based theme:** the page flips between dark and light every time the number is prime.
+- **Milestone celebrations:** star bursts, confetti, fireworks, a golden "legendary" tier and a
+  one-in-a-million finale.
+- **Physics:** fling the number around the screen and watch it bounce.
+
+|                                       Fireworks (every 10,000th)                                       |                                          Legendary (every 100,000th)                                           |
+| :----------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------: |
+| <img src="docs/screenshots/fireworks.webp" alt="Fireworks celebration for number 10000" width="420" /> | <img src="docs/screenshots/legendary.webp" alt="Golden legendary celebration for number 100000" width="420" /> |
+|                                   **The finale (number 1,000,000)**                                    |                                                   **Mobile**                                                   |
+|       <img src="docs/screenshots/million.webp" alt="The one-in-a-million finale" width="420" />        |                <img src="docs/screenshots/mobile.webp" alt="The app on a phone" width="180" />                 |
+
+### Highlights
+
+- **Lock-free and correct under concurrency.** A single atomic Redis Lua script issues every
+  number. There are no mutexes and no deadlocks, and a strict total order is guaranteed.
+- **Proven, not promised.** 128 unit and real-Redis integration tests, plus an HTTP stress test
+  (50 → 500 → 5,000 simultaneous visitors, and a race for the last 100 numbers) on every push.
+- **Never burns numbers on bots.** The page is a static shell. Link previews, crawlers and
+  prefetches never allocate.
+- **Accessible and fast.** Screen-reader announcements, keyboard controls and reduced-motion
+  alternatives. Lighthouse 100/100/100/100 on desktop.
+
+**Stack:** Next.js 16 (App Router) · TypeScript (strict) · Tailwind CSS 4 · Upstash Redis
+(`@upstash/redis`, `@upstash/ratelimit`) · `canvas-confetti` · Vitest · ESLint · Prettier ·
+Vercel.
 
 ---
 
@@ -245,6 +288,8 @@ local Redis, fully offline.
 
 ### Deploy to Vercel
 
+The live instance is at https://one-in-a-million-nine.vercel.app. To run your own:
+
 1. Import the repo into Vercel.
 2. Add an Upstash Redis database (Marketplace → Upstash). This injects `KV_REST_API_*`, or you can
    set the `UPSTASH_*` variables yourself.
@@ -269,6 +314,9 @@ The reset script:
 ---
 
 ## Tests
+
+The whole suite, `npm run verify`, runs in [GitHub Actions](.github/workflows/ci.yml) on every push
+and pull request.
 
 ```bash
 npm run redis:up          # required for integration + stress
