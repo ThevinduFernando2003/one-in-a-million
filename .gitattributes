@@ -1,0 +1,4 @@
+# Keep LF everywhere (Prettier enforces LF; avoids CRLF diffs on Windows).
+* text=auto eol=lf
+*.png binary
+*.ico binary
