@@ -9,6 +9,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![Redis](https://img.shields.io/badge/Upstash-Redis-00e9a3?logo=redis&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ### ▶ [one-in-a-million-nine.vercel.app](https://one-in-a-million-nine.vercel.app)
 
@@ -390,3 +391,7 @@ proxy.ts      sets the visitor cookie on page load (never allocates)
 scripts/      stress.ts, stress-local.ts, stress-core.ts, reset.ts, ops.ts
 tests/        unit/, integration/
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Thevindu Fernando

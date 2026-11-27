@@ -2,6 +2,7 @@
   "name": "one-in-a-million",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Every visitor gets a unique number, in order, until all one million are taken. Lock-free atomic Redis allocation on Next.js + Upstash.",
   "homepage": "https://one-in-a-million-nine.vercel.app",
   "repository": {
