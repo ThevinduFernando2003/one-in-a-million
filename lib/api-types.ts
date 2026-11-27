@@ -22,6 +22,7 @@ export type TokenErrorResponse = {
     | "misconfigured"
     | "rate_limited"
     | "forbidden"
+    | "automated_client"
     | "bad_request"
     | "payload_too_large";
 };

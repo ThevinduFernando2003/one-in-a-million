@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   // 1) Cheap filters first. These run before any Redis call.
   if (isBotUserAgent(h.get("user-agent"))) {
     logEvent("token.rejected", { reason: "bot_ua" }, "warn");
-    return fail(403, "forbidden", "Automated clients cannot take a number.");
+    return fail(403, "automated_client", "Automated clients cannot take a number.");
   }
   if (
     !isAllowedOrigin({

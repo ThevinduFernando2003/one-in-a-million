@@ -16,7 +16,7 @@
  * word rules. `\bbot` needs a word boundary, so phone models like "CUBOT"
  * stay allowed.
  */
-const BOT_UA =
+export const BOT_UA =
   /bot\/|bot;|bot\)|\bbot\b|crawler|spider|slurp|facebookexternalhit|facebookcatalog|meta-externalagent|whatsapp\/|skypeuripreview|embedly|vkshare|slack-imgproxy|bitlybot|quora link preview|w3c_validator|headlesschrome|phantomjs|puppeteer|playwright|google-inspectiontool|google-read-aloud|mediapartners-google|feedfetcher|bingpreview|iframely|metainspector|ccbot|gptbot|chatgpt-user|claude-web|perplexity|bytespider|petalbot|semrush|ahrefs|uptimerobot|pingdom|statuscake/i;
 
 export function isBotUserAgent(ua: string | null | undefined): boolean {

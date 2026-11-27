@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { TokenResponse } from "@/lib/api-types";
+import { isBotUserAgent } from "@/lib/guards";
 import { MILESTONE_LABEL, type Milestone } from "@/lib/milestones";
 import { MAX_ATTEMPTS, requestToken, takePreloaded, TokenRequestError } from "@/lib/token-client";
 import DraggableNumber from "./DraggableNumber";
@@ -16,6 +17,10 @@ type State =
   | { kind: "loading"; attempt: number }
   | { kind: "ready"; data: TokenResponse & { number: number } }
   | { kind: "soldOut" }
+  // Search-engine crawlers that render JavaScript (e.g. Googlebot) are refused
+  // a number. They get a description of the site instead of an error, and that
+  // description is what gets indexed.
+  | { kind: "about" }
   | { kind: "error"; message: string; retryable: boolean };
 
 const THEME_COLOR = { dark: "#0b0c10", light: "#f6f4ef", neutral: "#9a9ea6" } as const;
@@ -35,6 +40,19 @@ function applyTheme(theme: keyof typeof THEME_COLOR) {
 let inflight: Promise<TokenResponse> | null = null;
 
 function takeNumber(onAttempt: (n: number) => void): Promise<TokenResponse> {
+  // Crawlers that run JavaScript (Googlebot, Bingbot …) never ask for a
+  // number. They see the "about" description, which is what gets indexed.
+  if (isBotUserAgent(navigator.userAgent)) {
+    return Promise.reject(
+      new TokenRequestError(
+        "Automated clients cannot take a number.",
+        false,
+        403,
+        undefined,
+        "automated_client",
+      ),
+    );
+  }
   inflight ??= requestToken({ onAttempt, preloaded: takePreloaded() }).finally(() => {
     // Allow a fresh request on an explicit "Try again" or a later remount.
     setTimeout(() => (inflight = null), 0);
@@ -77,6 +95,10 @@ export default function TokenDisplay() {
       .catch((err: unknown) => {
         if (!mounted.current) return;
         const e = err instanceof TokenRequestError ? err : null;
+        if (e?.code === "automated_client") {
+          setState({ kind: "about" });
+          return;
+        }
         setState({
           kind: "error",
           message: e?.message ?? "Something went wrong.",
@@ -111,6 +133,7 @@ export default function TokenDisplay() {
     if (milestone) announcement += `. ${MILESTONE_LABEL[milestone]}`;
   } else if (state.kind === "soldOut")
     announcement = "Sold out: all one million numbers are taken.";
+  else if (state.kind === "about") announcement = "";
   else announcement = `Error: ${state.message}`;
 
   return (
@@ -151,6 +174,18 @@ export default function TokenDisplay() {
               Sold out
             </p>
             <p className="text-muted mt-3 text-lg sm:text-xl">All one million numbers are taken.</p>
+          </div>
+        )}
+
+        {state.kind === "about" && (
+          <div className="fade-in max-w-xl px-6 text-center">
+            <h2 className="text-[clamp(2.25rem,9vw,4.5rem)] leading-tight font-extrabold tracking-tight">
+              Take a number.
+            </h2>
+            <p className="text-muted mt-4 text-lg sm:text-xl">
+              Every visitor gets a unique number, handed out in order from 1, until all one million
+              are taken. Open this page in your browser to get yours.
+            </p>
           </div>
         )}
 

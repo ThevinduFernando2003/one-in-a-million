@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   backoffDelay,
   isRetryableStatus,
+  PRELOAD_SCRIPT,
   requestToken,
   TokenRequestError,
 } from "@/lib/token-client";
@@ -154,5 +155,41 @@ describe("requestToken", () => {
     });
     expect(res.number).toBe(42);
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("crawler handling", () => {
+  it("exposes the API error code (automated_client) on the error", async () => {
+    const fetchImpl = vi.fn(async () =>
+      respond(403, { error: "Automated clients cannot take a number.", code: "automated_client" }),
+    );
+    const err = (await requestToken({ fetchImpl, sleep: async () => {} }).catch(
+      (e: unknown) => e,
+    )) as TokenRequestError;
+    expect(err.code).toBe("automated_client");
+    expect(err.retryable).toBe(false);
+  });
+
+  function runPreload(userAgent: string) {
+    const fetchSpy = vi.fn(() => Promise.resolve(new Response("{}")));
+    const win: Record<string, unknown> = { fetch: fetchSpy, Promise };
+    new Function("window", "navigator", "fetch", PRELOAD_SCRIPT)(win, { userAgent }, fetchSpy);
+    return { fetchSpy, win };
+  }
+
+  it("the inline preload script never fires for Googlebot", () => {
+    const { fetchSpy, win } = runPreload(
+      "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    );
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(win.__oiamToken).toBeUndefined();
+  });
+
+  it("the inline preload script fires for a normal browser", () => {
+    const { fetchSpy, win } = runPreload(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+    );
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(win.__oiamToken).toBeInstanceOf(Promise);
   });
 });

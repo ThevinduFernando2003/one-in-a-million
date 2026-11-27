@@ -1,4 +1,5 @@
 import { isTokenResponse, type TokenResponse } from "./api-types";
+import { BOT_UA } from "./guards";
 
 /**
  * Browser-side caller for POST /api/token, with retries.
@@ -26,6 +27,8 @@ export class TokenRequestError extends Error {
     readonly retryable: boolean,
     readonly status?: number,
     readonly retryAfterMs?: number,
+    /** Machine-readable error code from the API body, e.g. "automated_client". */
+    readonly code?: string,
   ) {
     super(message);
     this.name = "TokenRequestError";
@@ -85,7 +88,7 @@ declare global {
  * execute JS), and the API still rejects bots. `.catch` marks the promise
  * as handled. Errors are dealt with by requestToken.
  */
-export const PRELOAD_SCRIPT = `(function(){try{if(!window.fetch||!window.Promise)return;var p=fetch("/api/token",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:"{}",credentials:"same-origin",cache:"no-store"});p.catch(function(){});window.__oiamToken=p}catch(e){}})();`;
+export const PRELOAD_SCRIPT = `(function(){try{if(!window.fetch||!window.Promise)return;if(new RegExp(${JSON.stringify(BOT_UA.source)},"i").test(navigator.userAgent))return;var p=fetch("/api/token",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:"{}",credentials:"same-origin",cache:"no-store"});p.catch(function(){});window.__oiamToken=p}catch(e){}})();`;
 
 /** Take the preloaded request, if any (only once). */
 export function takePreloaded(): Promise<Response> | undefined {
@@ -155,6 +158,9 @@ async function attemptOnce(
       isRetryableStatus(res.status),
       res.status,
       parseRetryAfter(res.headers.get("Retry-After")),
+      body && typeof body === "object" && typeof (body as { code?: unknown }).code === "string"
+        ? (body as { code: string }).code
+        : undefined,
     );
   } finally {
     clearTimeout(timer);
